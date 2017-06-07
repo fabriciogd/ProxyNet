@@ -13,6 +13,8 @@
 
     public class ProxyClient : IProxy
     {
+        private Guid _id = Guid.NewGuid();
+
 
         WebSettings webSettings = new WebSettings();
 
@@ -54,20 +56,21 @@
             var url = this.GetEffectiveUrl(client, mi);
             var headers = this.GetHeaders(mi);
 
-            this.MaybeFormatUrl(url, mi, parameters);
+            url = this.MaybeFormatUrl(url, mi, ref parameters);
 
             WebRequest webRequest = this.GetWebRequest(url);
 
             this.SetRequestProperties(webRequest);
             this.SetRequestHeaders(webRequest, headers);
-            this.MakeProxyRequest(webRequest, mi);
+
+            ProxyRequest req = this.MakeProxyRequest(webRequest, mi, parameters, _id);
 
             if (mi.GetMethod() != Method.GET)
             {
                 Stream requestStream = null;
                 Stream serializedStream = null;
 
-                if (!LogRequest)
+                if (!this.LogRequest)
                 {
                     serializedStream = requestStream = webRequest.GetRequestStream();
                 }
@@ -78,10 +81,10 @@
 
                 try
                 {
-                    var serializer = new ProxyRequestSerializer();
-                    serializer.Serializer(serializedStream, parameters);
+                    var serializer = this.GetRequestSerializer(client, mi);
+                    serializer.Serialize(serializedStream, parameters);
 
-                    if (LogRequest)
+                    if (this.LogRequest)
                     {
                         requestStream = webRequest.GetRequestStream();
                         serializedStream.Position = 0;
@@ -91,14 +94,23 @@
                         requestStream.Flush();
                         serializedStream.Position = 0;
 
-                        OnRequest(new ProxyRequestEventArgs(serializedStream));
+                        OnRequest(new ProxyRequestEventArgs(req.Id, req.Number, req.Url, serializedStream));
                     }
 
                 }
                 finally
                 {
                     if (requestStream != null)
+                    {
                         requestStream.Close();
+                    }
+                }
+            }
+            else
+            {
+                if (this.LogRequest)
+                {
+                    OnRequest(new ProxyRequestEventArgs(req.Id, req.Number, req.Url, null));
                 }
             }
 
@@ -128,37 +140,43 @@
 
                 if (LogResponse)
                 {
-                    OnResponse(new ProxyResponseEventArgs(deserializedStream));
+                    OnResponse(new ProxyResponseEventArgs(req.Id, req.Number, req.Url, deserializedStream));
                     deserializedStream.Position = 0;
                 }
 
-                response = this.ReadResponse(webResponse, deserializedStream, mi);
+                response = this.ReadResponse(webResponse, deserializedStream, client, mi);
             }
             finally
             {
                 if (webRequest != null)
+                {
                     webRequest = null;
+                }
             }
 
             return response;
         }
 
-        private void MaybeFormatUrl(string url, MethodInfo mi, object[] parameters)
+        private string MaybeFormatUrl(string url, MethodInfo mi, ref object[] parameters)
         {
-            if (mi.GetMethod() == Method.GET && parameters.Length > 0)
-                url = url.Format(mi, parameters);
+            var formattedUrl = Util.Format(url, mi, parameters);
+
+            parameters = Util.RemoveUnusedArguments(url, mi, parameters);
+
+            return formattedUrl;
         }
 
-        public object ReadResponse(WebResponse webResponse, Stream responseStream, MethodInfo mi)
+        public object ReadResponse(WebResponse webResponse, Stream responseStream, ProxyClient client, MethodInfo mi)
         {
             HttpWebResponse httpResp = (HttpWebResponse)webResponse;
 
-            if (httpResp.StatusCode == HttpStatusCode.BadRequest)
+            if (!httpResp.IsSuccessStatusCode())
             {
                 throw new Exception(httpResp.StatusDescription);
             }
 
-            var deserializer = new ProxyResponseDeserializer();
+            var deserializer = this.GetResponseDeserializer(client, mi);
+
             return deserializer.Deserialize(responseStream, mi.ReturnType);
         }
 
@@ -179,7 +197,9 @@
                 decodedStream = new System.IO.Compression.DeflateStream(respStream, System.IO.Compression.CompressionMode.Decompress);
             }
             else
+            {
                 decodedStream = respStream;
+            }
 
             return decodedStream;
         }
@@ -195,7 +215,9 @@
             catch (WebException ex)
             {
                 if (ex.Response == null)
+                {
                     throw;
+                }
 
                 webResponse = ex.Response;
             }
@@ -208,7 +230,9 @@
             var baseUrl = client.GetUrlAttribute();
 
             if (string.IsNullOrEmpty(baseUrl))
+            {
                 throw new System.Exception("Proxy URL attribute not set.");
+            }
 
             var path = mi.GetUrlAttribute();
 
@@ -243,17 +267,21 @@
             httpWebRequest.UserAgent = this.UserAgent;
 
             if (this.EnableCompression)
+            {
                 httpWebRequest.Headers.Add(HttpRequestHeader.AcceptEncoding, "gzip,deflate");
+            }
 
             httpWebRequest.Credentials = this.Credentials;
             httpWebRequest.UseDefaultCredentials = false;
 
         }
 
-        private void MakeProxyRequest(WebRequest webRequest, MethodInfo mi)
+        private ProxyRequest MakeProxyRequest(WebRequest webRequest, MethodInfo mi, object[] parameters, Guid proxyId)
         {
             webRequest.Method = mi.GetMethod().ToString();
             webRequest.ContentType = mi.GetContentType();
+
+            return new ProxyRequest(webRequest.Method, mi, parameters, webRequest.RequestUri.ToString(), proxyId);
         }
 
         private void SetRequestHeaders(WebRequest webRequest, WebHeaderCollection headers)
@@ -262,6 +290,36 @@
             {
                 webRequest.Headers.Add(key, headers[key]);
             }
+        }
+
+        private IProxyRequestSerializer GetRequestSerializer(ProxyClient client, MethodInfo mi)
+        {
+            var serializer = client.GetSerializer();
+
+            if (serializer != null)
+                return serializer;
+
+            serializer = mi.GetSerializer();
+
+            if (serializer != null)
+                return serializer;
+
+            return new ProxyRequestSerializer();
+        }
+
+        private IProxyResponseDeserializer GetResponseDeserializer(ProxyClient client, MethodInfo mi)
+        {
+            var deserializer = client.GetDeserializer();
+
+            if (deserializer != null)
+                return deserializer;
+
+            deserializer = mi.GetDeserializer();
+
+            if (deserializer != null)
+                return deserializer;
+
+            return new ProxyResponseDeserializer();
         }
 
         internal bool LogResponse

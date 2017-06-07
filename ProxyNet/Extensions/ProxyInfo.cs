@@ -2,9 +2,8 @@
 {
     using Enum;
     using ProxyNet.Attributes;
+    using Serializer;
     using System;
-    using System.Collections.Generic;
-    using System.Linq;
     using System.Net;
     using System.Reflection;
 
@@ -56,11 +55,41 @@
             return contentType;
         }
 
-        public static List<string> GetProxyParameters(this MethodInfo methodInfo)
+        public static IProxyRequestSerializer GetSerializer(this ProxyClient proxy)
         {
-            ProxyParameterInfoAttribute[] attrs = (ProxyParameterInfoAttribute[])Attribute.GetCustomAttributes(methodInfo, typeof(ProxyParameterInfoAttribute));
+            var attr = Attribute.GetCustomAttribute(proxy.GetType(), typeof(ProxySerializerAttribute)) as ProxySerializerAttribute;
+            var serializer = attr == null ? null : attr.Serializer;
 
-            return attrs.Select(a => a.Name).ToList();
+            return serializer;
+        }
+
+        public static IProxyRequestSerializer GetSerializer(this MethodInfo methodInfo)
+        {
+            var attr = Attribute.GetCustomAttribute(methodInfo, typeof(ProxySerializerAttribute)) as ProxySerializerAttribute;
+            var serializer = attr == null ? null : attr.Serializer;
+
+            return serializer;
+        }
+
+        public static IProxyResponseDeserializer GetDeserializer(this ProxyClient proxy)
+        {
+            var attr = Attribute.GetCustomAttribute(proxy.GetType(), typeof(ProxyDeserializerAttribute)) as ProxyDeserializerAttribute;
+            var deserializer = attr == null ? null : attr.Deserializer;
+
+            return deserializer;
+        }
+
+        public static IProxyResponseDeserializer GetDeserializer(this MethodInfo methodInfo)
+        {
+            var attr = Attribute.GetCustomAttribute(methodInfo, typeof(ProxyDeserializerAttribute)) as ProxyDeserializerAttribute;
+            var deserializer = attr == null ? null : attr.Deserializer;
+
+            return deserializer;
+        }
+
+        public static bool IsSuccessStatusCode(this HttpWebResponse httpWebResponse)
+        {
+            return ((int)httpWebResponse.StatusCode >= 200) && ((int)httpWebResponse.StatusCode <= 299);
         }
     }
 }

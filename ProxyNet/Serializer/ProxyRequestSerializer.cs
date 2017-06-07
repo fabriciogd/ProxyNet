@@ -4,9 +4,9 @@
     using Newtonsoft.Json.Converters;
     using System.IO;
 
-    public class ProxyRequestSerializer
+    public class ProxyRequestSerializer : IProxyRequestSerializer
     {
-        public void Serializer(Stream stream, object[] parameters)
+        public void Serialize(Stream stream, object[] parameters)
         {
             JsonSerializerSettings settings = new JsonSerializerSettings();
             settings.Converters.Add(new IsoDateTimeConverter { DateTimeFormat = "dd-MMM-yyyy" });

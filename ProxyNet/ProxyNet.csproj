@@ -45,15 +45,15 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Attributes\ProxyContentTypeAttribute.cs" />
+    <Compile Include="Attributes\ProxyDeserializerAttribute.cs" />
     <Compile Include="Attributes\ProxyHeaderAttribute.cs" />
     <Compile Include="Attributes\ProxyMethodAttribute.cs" />
-    <Compile Include="Attributes\ProxyParameterInfoAttribute.cs" />
+    <Compile Include="Attributes\ProxySerializerAttribute.cs" />
     <Compile Include="Attributes\ProxyUrlAttribute.cs" />
     <Compile Include="Enum\Method.cs" />
     <Compile Include="Events\ProxyRequestEventArgs.cs" />
     <Compile Include="Events\ProxyResponseEventArgs.cs" />
     <Compile Include="Extensions\StringExtensions.cs" />
-    <Compile Include="Extensions\UrlExtensions.cs" />
     <Compile Include="Helpers\Util.cs" />
     <Compile Include="Infraestructure\WebSettings.cs" />
     <Compile Include="IProxy.cs" />
@@ -63,6 +63,8 @@
     <Compile Include="Extensions\ProxyInfo.cs" />
     <Compile Include="ProxyRequest.cs" />
     <Compile Include="Runtime\ProxyFactory.cs" />
+    <Compile Include="Serializer\IProxyRequestSerializer.cs" />
+    <Compile Include="Serializer\IProxyResponseDeserializer.cs" />
     <Compile Include="Serializer\ProxyRequestSerializer.cs" />
     <Compile Include="Serializer\ProxyResponseDeserializer.cs" />
   </ItemGroup>

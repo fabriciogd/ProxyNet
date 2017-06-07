@@ -1,37 +1,36 @@
-﻿using System.Net;
-
-namespace ProxyNet.Infraestructure
+﻿namespace ProxyNet.Infraestructure
 {
+    using System.Net;
+
     public class WebSettings
     {
         public string UserAgent
         {
-            get { return _userAgent; }
-            set { _userAgent = value; }
+            get { return this._userAgent; }
+            set { this._userAgent = value; }
         }
 
         private string _userAgent = "Proxy.NET";
 
-
         public bool EnableCompression
         {
-            get { return _enableCompression; }
-            set { _enableCompression = value; }
+            get { return this._enableCompression; }
+            set { this._enableCompression = value; }
         }
 
         private bool _enableCompression = false;
 
         public WebHeaderCollection Headers
         {
-            get { return _headers; }
+            get { return this._headers; }
 
         }
         private WebHeaderCollection _headers = new WebHeaderCollection();
 
         public ICredentials Credentials
         {
-            get { return _credentials; }
-            set { _credentials = value; }
+            get { return this._credentials; }
+            set { this._credentials = value; }
         }
 
         private ICredentials _credentials = null;

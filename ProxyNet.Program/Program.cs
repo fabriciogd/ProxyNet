@@ -9,13 +9,15 @@ namespace ProxyNet.Program
         {
             ITesteProxy proxy = Proxy.Create<ITesteProxy>();
 
-            object adicionado = proxy.Adicionar(new { title = "Adicionar" });
+            object addedPost = proxy.AddPost(new { title = "Adicionar" });
 
-            object[] lista = proxy.Listar();
+            object[] posts = proxy.ListPosts();
 
-            object item = proxy.Obter(2);
+            object post = proxy.GetPost(2);
 
-            object[] comentarios = proxy.Comments(2);
+            object[] comments = proxy.GetComments(2);
+
+            proxy.DeletePost(2);
         }
     }
 
@@ -25,20 +27,22 @@ namespace ProxyNet.Program
         [ProxyUrl("/posts")]
         [ProxyMethod(Method.POST)]
         [ProxyContentType("application/json")]
-        object Adicionar(object post);
+        object AddPost(object post);
 
         [ProxyUrl("/posts")]
         [ProxyMethod(Method.GET)]
-        object[] Listar();
+        object[] ListPosts();
 
-        [ProxyUrl("/posts")]
+        [ProxyUrl("/posts?postId={postId}")]
         [ProxyMethod(Method.GET)]
-        [ProxyParameterInfo("postId")]
-        object Obter(int postId);
+        object GetPost(int postId);
 
         [ProxyUrl("/posts/{postId}/comments")]
         [ProxyMethod(Method.GET)]
-        [ProxyParameterInfo("postId")]
-        object[] Comments(int postId);
+        object[] GetComments(int postId);
+
+        [ProxyUrl("/posts/{postId}")]
+        [ProxyMethod(Method.DELETE)]
+        void DeletePost(int postId);
     }
 }

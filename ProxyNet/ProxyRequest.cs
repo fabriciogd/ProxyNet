@@ -5,19 +5,53 @@
 
     public class ProxyRequest
     {
-        public ProxyRequest(string methodName, object[] parameters, MethodInfo methodInfo)
+        public ProxyRequest(string method, MethodInfo methodInfo, object[] parameters, string url, Guid id)
         {
-            Method = methodName;
-            Args = parameters;
-            Mi = methodInfo;
-
-            if (Mi != null)
-                ReturnType = Mi.ReturnType;
+            this._method = method;
+            this._methodInfo = methodInfo;
+            this._parameters = parameters;
+            this._url = url;
+            this._id = id;
         }
 
-        public String Method = null;
-        public Object[] Args = null;
-        public MethodInfo Mi = null;
-        public Type ReturnType;
+        public string Method
+        {
+            get { return this._method; }
+        }
+
+        private string _method;
+
+        public MethodInfo MethodInfo
+        {
+            get { return this._methodInfo; }
+        }
+
+        private MethodInfo _methodInfo;
+
+        public object[] Parameters
+        {
+            get { return this._parameters; }
+        }
+
+        private object[] _parameters;
+
+        public string Url
+        {
+            get { return this._url; }
+        }
+
+        private string _url;
+
+        public Guid Id
+        {
+            get { return this._id; }
+        }
+
+        private Guid _id;
+
+        static int _created;
+
+        public int Number = System.Threading.Interlocked.Increment(ref _created);
+
     }
 }

@@ -9,6 +9,7 @@
         public static string Format(this string format, IDictionary<string, object> values)
         {
             var matches = Regex.Matches(format, @"\{(.+?)\}");
+
             List<string> words = (from Match matche in matches select matche.Groups[1].Value).ToList();
 
             return words.Aggregate(

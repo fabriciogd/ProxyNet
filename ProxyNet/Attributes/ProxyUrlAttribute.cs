@@ -7,10 +7,10 @@
     {
         public ProxyUrlAttribute(string url)
         {
-            _url = url;
+            this._url = url;
         }
 
-        public string Url { get { return _url; } }
+        public string Url { get { return this._url; } }
 
         private readonly string _url;
     }

@@ -4,7 +4,7 @@
     using System;
     using System.IO;
 
-    public class ProxyResponseDeserializer
+    public class ProxyResponseDeserializer : IProxyResponseDeserializer
     {
         public object Deserialize(Stream responseStream, Type returnType)
         {

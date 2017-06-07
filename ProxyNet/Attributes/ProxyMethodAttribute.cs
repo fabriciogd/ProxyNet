@@ -8,10 +8,10 @@
     {
         public ProxyMethodAttribute(Method method)
         {
-            _method = method;
+            this._method = method;
         }
 
-        public Method Method { get { return _method; } }
+        public Method Method { get { return this._method; } }
 
         private readonly Method _method;
     }
